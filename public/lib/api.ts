@@ -1,5 +1,5 @@
 import { treaty } from '@elysiajs/eden'
 
-import type { app } from '@/server/index'
+import type { api } from '@/server/routes/route'
 
-export const api = treaty<typeof app>('localhost:3000')
+export const client = treaty<typeof api>('localhost:3000')

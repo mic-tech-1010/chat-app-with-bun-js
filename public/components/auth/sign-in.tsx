@@ -1,23 +1,26 @@
-import { useForm } from "@tanstack/react-form"
-import { z } from "zod"
+import { useMutation } from "@tanstack/react-query";
+import { useForm } from "@tanstack/react-form";
+import { useNavigate } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
+import { z } from "zod";
 
-import { authClient } from "@/lib/auth-client"
+import { authClient } from "@/lib/auth-client";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 
 const signInSchema = z.object({
   email: z
@@ -27,9 +30,37 @@ const signInSchema = z.object({
   password: z
     .string()
     .min(1, "Password is required."),
-})
+});
+
+type SignInValues = z.infer<typeof signInSchema>;
 
 export function SignInForm() {
+  const navigate = useNavigate();
+
+  const signInMutation = useMutation({
+    mutationKey: ["auth", "sign-in"],
+
+    mutationFn: async (values: SignInValues) => {
+      const { data, error } = await authClient.signIn.email({
+        email: values.email,
+        password: values.password,
+        callbackURL: "/",
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data;
+    },
+
+    onSuccess: async () => {
+      await navigate({
+        to: "/",
+      });
+    },
+  });
+
   const form = useForm({
     defaultValues: {
       email: "",
@@ -41,21 +72,12 @@ export function SignInForm() {
     },
 
     onSubmit: async ({ value }) => {
-      const { error } = await authClient.signIn.email({
-        email: value.email,
-        password: value.password,
-
-        callbackURL: "/dashboard",
-      })
-
-      if (error) {
-        alert(error.message)
-      }
+      signInMutation.mutate(value);
     },
-  })
+  });
 
   return (
-    <Card className="w-full sm:max-w-md">
+    <Card>
       <CardHeader>
         <CardTitle>Welcome back</CardTitle>
 
@@ -67,8 +89,8 @@ export function SignInForm() {
       <CardContent>
         <form
           onSubmit={(event) => {
-            event.preventDefault()
-            form.handleSubmit()
+            event.preventDefault();
+            form.handleSubmit();
           }}
         >
           <FieldGroup>
@@ -77,7 +99,7 @@ export function SignInForm() {
               children={(field) => {
                 const isInvalid =
                   field.state.meta.isTouched &&
-                  !field.state.meta.isValid
+                  !field.state.meta.isValid;
 
                 return (
                   <Field data-invalid={isInvalid}>
@@ -105,7 +127,7 @@ export function SignInForm() {
                       />
                     )}
                   </Field>
-                )
+                );
               }}
             />
 
@@ -114,7 +136,7 @@ export function SignInForm() {
               children={(field) => {
                 const isInvalid =
                   field.state.meta.isTouched &&
-                  !field.state.meta.isValid
+                  !field.state.meta.isValid;
 
                 return (
                   <Field data-invalid={isInvalid}>
@@ -142,16 +164,32 @@ export function SignInForm() {
                       />
                     )}
                   </Field>
-                )
+                );
               }}
             />
 
-            <Button type="submit" className="w-full">
-              Sign in
+            {signInMutation.isError && (
+              <p className="text-sm text-destructive">
+                {signInMutation.error.message}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={signInMutation.isPending}
+            >
+              {signInMutation.isPending && (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              )}
+
+              {signInMutation.isPending
+                ? "Signing in..."
+                : "Sign in"}
             </Button>
           </FieldGroup>
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }

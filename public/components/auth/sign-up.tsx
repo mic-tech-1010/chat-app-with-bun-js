@@ -1,24 +1,27 @@
-import { useForm } from "@tanstack/react-form"
-import { z } from "zod"
+import { useMutation } from "@tanstack/react-query";
+import { useForm } from "@tanstack/react-form";
+import { useNavigate } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
+import { z } from "zod";
 
-import { authClient } from "@/lib/auth-client"
+import { authClient } from "@/lib/auth-client";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@/public/components/ui/field"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 
 const signUpSchema = z
   .object({
@@ -37,12 +40,44 @@ const signUpSchema = z
 
     confirmPassword: z.string(),
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match.",
-    path: ["confirmPassword"],
-  })
+  .refine(
+    (data) => data.password === data.confirmPassword,
+    {
+      message: "Passwords do not match.",
+      path: ["confirmPassword"],
+    },
+  );
+
+type SignUpValues = z.infer<typeof signUpSchema>;
 
 export function SignUpForm() {
+  const navigate = useNavigate();
+
+  const signUpMutation = useMutation({
+    mutationKey: ["auth", "sign-up"],
+
+    mutationFn: async (values: SignUpValues) => {
+      const { data, error } = await authClient.signUp.email({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        callbackURL: "/",
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data;
+    },
+
+    onSuccess: async () => {
+      await navigate({
+        to: "/",
+      });
+    },
+  });
+
   const form = useForm({
     defaultValues: {
       name: "",
@@ -56,35 +91,25 @@ export function SignUpForm() {
     },
 
     onSubmit: async ({ value }) => {
-      const { error } = await authClient.signUp.email({
-        name: value.name,
-        email: value.email,
-        password: value.password,
-
-        callbackURL: "/dashboard",
-      })
-
-      if (error) {
-        alert(error.message)
-      }
+      signUpMutation.mutate(value);
     },
-  })
+  });
 
   return (
-    <Card className="w-full sm:max-w-md">
+    <Card>
       <CardHeader>
         <CardTitle>Create an account</CardTitle>
 
         <CardDescription>
-          Enter your details below to create your account.
+          Create your account and start connecting with people.
         </CardDescription>
       </CardHeader>
 
       <CardContent>
         <form
           onSubmit={(event) => {
-            event.preventDefault()
-            form.handleSubmit()
+            event.preventDefault();
+            form.handleSubmit();
           }}
         >
           <FieldGroup>
@@ -93,7 +118,7 @@ export function SignUpForm() {
               children={(field) => {
                 const isInvalid =
                   field.state.meta.isTouched &&
-                  !field.state.meta.isValid
+                  !field.state.meta.isValid;
 
                 return (
                   <Field data-invalid={isInvalid}>
@@ -120,7 +145,7 @@ export function SignUpForm() {
                       />
                     )}
                   </Field>
-                )
+                );
               }}
             />
 
@@ -129,7 +154,7 @@ export function SignUpForm() {
               children={(field) => {
                 const isInvalid =
                   field.state.meta.isTouched &&
-                  !field.state.meta.isValid
+                  !field.state.meta.isValid;
 
                 return (
                   <Field data-invalid={isInvalid}>
@@ -157,7 +182,7 @@ export function SignUpForm() {
                       />
                     )}
                   </Field>
-                )
+                );
               }}
             />
 
@@ -166,7 +191,7 @@ export function SignUpForm() {
               children={(field) => {
                 const isInvalid =
                   field.state.meta.isTouched &&
-                  !field.state.meta.isValid
+                  !field.state.meta.isValid;
 
                 return (
                   <Field data-invalid={isInvalid}>
@@ -198,7 +223,7 @@ export function SignUpForm() {
                       />
                     )}
                   </Field>
-                )
+                );
               }}
             />
 
@@ -207,7 +232,7 @@ export function SignUpForm() {
               children={(field) => {
                 const isInvalid =
                   field.state.meta.isTouched &&
-                  !field.state.meta.isValid
+                  !field.state.meta.isValid;
 
                 return (
                   <Field data-invalid={isInvalid}>
@@ -235,16 +260,32 @@ export function SignUpForm() {
                       />
                     )}
                   </Field>
-                )
+                );
               }}
             />
 
-            <Button type="submit" className="w-full">
-              Create account
+            {signUpMutation.isError && (
+              <p className="text-sm text-destructive">
+                {signUpMutation.error.message}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={signUpMutation.isPending}
+            >
+              {signUpMutation.isPending && (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              )}
+
+              {signUpMutation.isPending
+                ? "Creating account..."
+                : "Create account"}
             </Button>
           </FieldGroup>
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
