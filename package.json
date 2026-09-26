@@ -7,18 +7,22 @@
     "dev": "bun --hot src/index.ts",
     "start": "NODE_ENV=production bun src/index.ts",
     "build": "bun run build.ts",
-    "contract:emit": "prisma contract emit"
+    "contract:emit": "prisma contract emit",
+    "routes:watch": "tsr watch",
+    "routes:generate": "tsr generate"
   },
   "dependencies": {
     "@better-auth/prisma-adapter": "^1.7.6",
+    "@elysia/static": "^1.4.11",
     "@elysiajs/eden": "^1.4.5",
     "@elysiajs/openapi": "^1.4.11",
-    "@elysiajs/static": "1.4.7",
+    "@elysiajs/static": "^1.4.10",
     "@prisma/orm-postgres": "^8.0.0-rc.12",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.3",
     "@tanstack/react-form": "^1.33.5",
+    "@tanstack/react-router": "1.170.18",
     "better-auth": "^1.7.6",
     "bun-plugin-tailwind": "^0.1.2",
     "class-variance-authority": "^0.7.1",
@@ -35,6 +39,7 @@
   },
   "devDependencies": {
     "@prisma/cli-engine": "0.2.3",
+    "@tanstack/router-cli": "1.167.21",
     "@types/bun": "latest",
     "@types/node": "^26.6.2",
     "@types/react": "^19",
