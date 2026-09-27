@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { authClient } from "@/lib/auth-client";
 import { ModeToggle } from "../features/mode-toggle";
+import { Skeleton } from "../ui/skeleton";
 
 export function Header() {
   const { data: session, isPending } = authClient.useSession();
@@ -32,11 +33,11 @@ export function Header() {
 
   const initials = user?.name
     ? user.name
-        .split(" ")
-        .map((name) => name[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
+      .split(" ")
+      .map((name) => name[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase()
     : "?";
 
   return (
@@ -135,18 +136,24 @@ export function Header() {
               <Button
                 variant="ghost"
                 className="h-9 gap-2 rounded-full px-2"
+                disabled={isPending}
               >
-                <Avatar className="size-7">
-                  <AvatarFallback>
-                    {isPending ? "..." : initials}
-                  </AvatarFallback>
-                </Avatar>
+                {isPending ? (
+                  <>
+                    <Skeleton className="size-7 rounded-full" />
+                    <Skeleton className="hidden h-4 w-20 lg:block" />
+                  </>
+                ) : (
+                  <>
+                    <Avatar className="size-7">
+                      <AvatarFallback>{initials}</AvatarFallback>
+                    </Avatar>
 
-                <span className="hidden text-sm font-medium lg:inline">
-                  {isPending
-                    ? "Loading..."
-                    : user?.name ?? "Account"}
-                </span>
+                    <span className="hidden text-sm font-medium lg:inline">
+                      {user?.name ?? "Account"}
+                    </span>
+                  </>
+                )}
               </Button>
             </DropdownMenuTrigger>
 
