@@ -3,9 +3,8 @@ import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
-
 import { authClient } from "@/lib/auth-client";
-
+import { SocialAuth } from "@/components/auth/social-auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -283,6 +282,8 @@ export function SignUpForm() {
                 ? "Creating account..."
                 : "Create account"}
             </Button>
+
+            <SocialAuth />
           </FieldGroup>
         </form>
       </CardContent>

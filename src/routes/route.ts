@@ -3,7 +3,6 @@ import { openapi, fromTypes } from "@elysiajs/openapi";
 import { apiRouter } from "./api";
 import { betterAuthRouter } from "./better-auth";
 
-
 export const api = new Elysia()
   .use(
     openapi({

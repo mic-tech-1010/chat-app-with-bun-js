@@ -1,5 +1,10 @@
 // use prisma-8
 
+enum CHAT_TYPE{
+  DIRECT
+  GROUP
+}
+
 model User {
   id            String    @id
   name          String
@@ -12,6 +17,8 @@ model User {
 
   sessions      Session[]
   accounts      Account[]
+  conversationMemberships ConversationMember[]
+  messages Message[]
 
   @@map("user")
 }
@@ -69,4 +76,38 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model Conversation {
+  id Uuid @id @default(uuid())
+  type CHAT_TYPE
+  name String?
+  createdAt  TimestamptzString @default(now())
+  updatedAt  temporal.updatedAtString()
+  members ConversationMember[]
+  messages Message[]
+}
+
+model ConversationMember {
+  conversationId Uuid
+  userId  String
+  conversation  Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt TimestamptzString @default(now())
+
+  @@id([conversationId, userId])
+
+  @@index([userId])
+}
+
+model Message {
+  id Uuid @id @default(uuid())
+  content String
+  createdAt  TimestamptzString @default(now())
+  updatedAt  temporal.updatedAtString()
+  conversationId Uuid
+  senderId  String?
+  conversation  Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender    User?  @relation(fields: [senderId], references: [id], onDelete: SetNull)
+  @@index([conversationId, createdAt])
 }

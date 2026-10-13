@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
+import { SocialAuth } from "@/components/auth/social-auth";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -187,6 +188,8 @@ export function SignInForm() {
                 ? "Signing in..."
                 : "Sign in"}
             </Button>
+
+            <SocialAuth />
           </FieldGroup>
         </form>
       </CardContent>
