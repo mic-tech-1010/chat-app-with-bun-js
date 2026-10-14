@@ -3,13 +3,29 @@ import index from "../public/index.html";
 import { api } from "./routes/route.ts";
 import { handleMessage } from "./websocket/websocket.ts";
 import { setWebSocketServer } from "./websocket/server.ts";
+import { auth } from "./lib/auth.ts";
+import type { WebSocketData } from "./types";
 
-const handleWebSocket = (
+async function handleWebSocket(
   request: Request,
-  server: Bun.Server<undefined>,
-) => {
-  
-  if (server.upgrade(request)) return;
+  server: Bun.Server<WebSocketData>,
+) {
+
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  });
+
+  if (!session) {
+    return new Response("Unauthorized", {
+      status: 401,
+    });
+  }
+
+  if (server.upgrade(request, {
+    data:{
+      userId: session.user.id,
+    }
+  })) return;
 
   return new Response("WebSocket upgrade failed", {
     status: 400,
@@ -26,7 +42,7 @@ const isDocumentRequest = (request: Request) =>
   request.method === "GET" &&
   (request.headers.get("accept") ?? "").includes("text/html");
 
-const server = serve({
+const server = serve<WebSocketData>({
   port: 3000,
 
   routes: {
@@ -62,8 +78,6 @@ const server = serve({
     sendPings: true,
 
     open(ws) {
-      // Optional: Subscribe to a global room for server-wide broadcasts
-      ws.subscribe("global");
       console.log("🟢 WebSocket connected");
     },
 

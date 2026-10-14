@@ -1,8 +1,9 @@
 import type { Server } from "bun";
+import type { WebSocketData } from "../types";
 
-let bunServer: Server<unknown>;
+let bunServer: Server<WebSocketData>;
 
-export function setWebSocketServer(server: Server<unknown>) {
+export function setWebSocketServer(server: Server<WebSocketData>) {
   bunServer = server;
 
   console.log("✅ Bun WebSocket server reference initialized");

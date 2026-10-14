@@ -2,6 +2,7 @@ import Elysia from "elysia";
 import { betterAuthRouter } from "../better-auth";
 import { db } from "../../prisma/db"
 import { conversationIdParamSchema, createMessageSchema } from "@/server/schema/conversation";
+import { broadcastToConversationMembers } from "@/server/websocket/websocket";
 
 export const apiRouter = new Elysia({ prefix: "api/v1" })
     .use(betterAuthRouter)
@@ -47,12 +48,12 @@ export const apiRouter = new Elysia({ prefix: "api/v1" })
                 });
             }
 
-            const messages = await db.orm.public. Message
-            .where({
-                conversationId: params.id,
-            })
-            .orderBy((u) => u.createdAt.asc())
-            .all();
+            const messages = await db.orm.public.Message
+                .where({
+                    conversationId: params.id,
+                })
+                .orderBy((u) => u.createdAt.asc())
+                .all();
 
             return messages;
         },
@@ -83,7 +84,16 @@ export const apiRouter = new Elysia({ prefix: "api/v1" })
                 senderId: user.id,
             });
 
+            broadcastToConversationMembers(
+                params.id,
+                {
+                    type: "message.created",
+                    data: message,
+                }
+            );
+
             return status(201, message);
+            
         },
         {
             auth: true,
